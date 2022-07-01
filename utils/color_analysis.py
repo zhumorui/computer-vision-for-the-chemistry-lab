@@ -1,18 +1,7 @@
-
-
-
-
-
-
-
-
 import numpy as np
 
-
-
-
 # Calculate Color change between two different images.
-# Input should be RGB images not BGR images!!!
+# Input Channel should be RGB not BGR. 
 def cal_color_change(img1,img2):
     assert img1.shape == img2.shape, "Image Size doesn't match"
     
