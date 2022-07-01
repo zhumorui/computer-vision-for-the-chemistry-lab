@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Desktop Services Store File in Mac
+.Ds_Store
+
 # Videos Resources for test
 Videos_Resources/
 

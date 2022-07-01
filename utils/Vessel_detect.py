@@ -2,7 +2,7 @@
 ###############################################################################################################################
 
 #--------------------------------------Running pramters-------------------------------------------------------------------------------
-UseGPU=True # run on GPU (true) or CPU (false) # Note this system is slow on GPU and very very slow on CPU
+UseGPU=False # run on GPU (true) or CPU (false) # Note this system is slow on GPU and very very slow on CPU
 FreezeBatchNorm_EvalON=True # Freeze the upddating of bath normalization statitics -->  use net.eval()
 
 VesIOUthresh=0.4 #7 # IOU quality threshold for predicted vessel instance to be accepted

@@ -2,7 +2,7 @@ import cv2
 from Exp_v3 import Exp
 import time
 
-cap = cv2.VideoCapture("../Videos_for_test/20210607_152134.mp4")
+cap = cv2.VideoCapture("Videos_Resources/nomask_video2.mp4")
 #cap2 = cv2.VideoCapture("Videos_for_test/short_20210607_152134.mp4")
 camera1 = Exp("test1")
 
@@ -14,8 +14,7 @@ camera1 = Exp("test1")
 while True:
     ret,frame = cap.read()
     if frame is not None:
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        image_with_mask = camera1.get_vessel_image_with_mask(rgb)
+        image_with_mask = camera1.get_vessel_image_with_mask(frame)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(image_with_mask, 
