@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Output dirctionary
+output/
+
+
 # Desktop Services Store File in Mac
 .Ds_Store
 

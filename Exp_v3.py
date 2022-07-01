@@ -30,7 +30,7 @@ class Exp():
                 video_stream_fps = 25,
                 default_save_data_format = 'xlsx', # optional format:csv
                 interval_time_detect_vessel = 1200, # Unit: Second 
-                interval_time_detect_vessel_while_no_vessel_detect = 180, # Unit: Second
+                interval_time_detect_vessel_while_no_vessel_detect = 20, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1 # Unit: Second
                 #...............Parameters Description...............................#

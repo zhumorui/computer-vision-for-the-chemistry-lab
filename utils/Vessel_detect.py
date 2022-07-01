@@ -12,7 +12,7 @@ IsVesThresh=0.5
 
 #...........................................Trained net Paths.......................................................................
 SemanticNetTrainedModelPath="utils/Semantic/logs/1000000_Semantic_withCOCO_AllSets.torch"
-InstanceVesselNetTrainedModelPath="utils/InstanceVesselWithCOCO/logs/Vessel_Coco_610000_Trained_on_All_Sets.torch"
+InstanceVesselNetTrainedModelPath="utils/InstanceVessel/logs/Vessel_Coco_610000_Trained_on_All_Sets.torch"
 #...............................Imports..................................................................
 
 import os

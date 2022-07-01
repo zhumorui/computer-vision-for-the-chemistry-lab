@@ -2,7 +2,7 @@ import cv2
 from Exp_v3 import Exp
 import time
 
-cap = cv2.VideoCapture("Videos_Resources/nomask_video2.mp4")
+cap = cv2.VideoCapture("Videos_Resources/Simplicity - Diffusion of Food Coloring in Water.mp4")
 #cap2 = cv2.VideoCapture("Videos_for_test/short_20210607_152134.mp4")
 camera1 = Exp("test1")
 
@@ -11,6 +11,7 @@ camera1 = Exp("test1")
 # interval time to detect vessel: ITDV (Unit: minutes)
 " Test 15 description: ITDV:10;DBMM >= 0.08;RIED:4;"
 " Test 16 description: ITDV:30; DBMM>= 0.05;RIED:4"
+
 while True:
     ret,frame = cap.read()
     if frame is not None:
