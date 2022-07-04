@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tkinter.constants import N
 from utils.Vessel_detect import get_frame_OutAnnMap
-from utils.color_analysis import cal_color_change
+import utils.color_analysis as color_analysis
 
 #........................Description.........................
 # Including liquid separation detect(finished) and color change detect function(not finished).
@@ -25,14 +25,15 @@ class Exp():
     
     def __init__(self,webcamera_id:str,
                 detect_liquid_separation_mode = True,
-                detect_color_change_mode = False,
-                main_colors_analysis_mode = False,
+                detect_color_change_mode = True,
+                main_colors_analysis_mode = True,
                 video_stream_fps = 25,
                 default_save_data_format = 'xlsx', # optional format:csv
-                interval_time_detect_vessel = 1200, # Unit: Second 
-                interval_time_detect_vessel_while_no_vessel_detect = 20, # Unit: Second
+                interval_time_detect_vessel = 120, # Unit: Second 
+                interval_time_detect_vessel_while_no_vessel_detect = 1, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
-                interval_time_calculate_color_change = 1 # Unit: Second
+                interval_time_calculate_color_change = 1, # Unit: Second
+                interval_time_main_colors_analysis = 5 # Unit: Second
                 #...............Parameters Description...............................#
                 # webcamer_id: webcamer_id should be unique for each wecamer stream. And the type of id is string.
                 # detect_liquid_separation_mode: image_entropy will be calculated and liquid_separation_process will be detected when it's True.
@@ -43,6 +44,7 @@ class Exp():
                 # interval_time_detect_vessel_while_no_vessel_detect: the interval time to detect vessel again if the program didn't detect a vessel in the video.
                 # interval_time_calculate_image_entropy: interval time to calculate image entropy.
                 # interval_time_calculate_color_change: interval time to calculate color change.
+                # interval_time_main_colors_analysis: interval time to analyze main colors
                 ):
         "get webcamer id and save data in the dir named with id"
         self.id = webcamera_id
@@ -57,6 +59,7 @@ class Exp():
         self.interval_time_calculate_image_entropy = interval_time_calculate_image_entropy * video_stream_fps
         self.interval_time_calculate_color_change = interval_time_calculate_color_change * video_stream_fps
         self.interval_time_detect_vessel_while_no_vessel_detect = interval_time_detect_vessel_while_no_vessel_detect * video_stream_fps
+        self.interval_time_main_colors_analysis = interval_time_main_colors_analysis * video_stream_fps
 
         "get fps of video stream."
         self.video_stream_fps = video_stream_fps
@@ -69,6 +72,7 @@ class Exp():
         self.count_for_detect_vessel_while_no_vessel_detect = 0
         self.count_for_calculate_image_entropy = 0
         self.count_for_calculate_color_change = 0
+        self.count_for_main_colors_analysis = 0
         
         "creat new dir to save output data"
         self.output_dir = 'output/'+ webcamera_id +'/'
@@ -78,6 +82,15 @@ class Exp():
         self.liquid_sep_video_clip = []
         self.liquid_sep_entropy_clip = []      
         self.color_change_video_clip = []
+
+        "initialize main_colors"
+        self.main_colors = None
+
+        "initialize old img for calculating color change"
+        self.old_img = None
+
+        "initialize color distance"
+        self.color_distance = 0
 
     def liquid_separation_detect(self,img,mask):
         "Create output dir for liquid_separation_detect"
@@ -106,39 +119,45 @@ class Exp():
                 del self.liquid_sep_video_clip[0]
                 del self.liquid_sep_entropy_clip[0]
 
-    def color_change_detect(self,img,mask):
+    def color_change_detect(self,old_img,new_img):
         "Create output dir for color_change_detect"
 
         self.color_change_output_dir = self.output_dir + 'color_change_detect/'
         if not os.path.exists(self.color_change_output_dir): os.makedirs(self.color_change_output_dir)
 
         # Get color data, and put them into a video clip.
-        color = self.cal_color(img,mask)
+        color_distance = color_analysis.cal_color_change(old_img,new_img)
         if len(self.color_change_video_clip) < 40:
-            self.color_change_video_clip.append(img)
+            self.color_change_video_clip.append(new_img)
         else:
-            if color is True:
+            if color_distance is True:
                 print("Detect Color Change Process! Save Data in the output dir!")
                 self.save_color_change_results(self.color_change_video_clip)
                 self.color_change_video_clip = []
 
             else:
-                self.color_change_video_clip.append(img)
+                self.color_change_video_clip.append(new_img)
                 del self.color_change_video_clip[0]
+        return color_distance
 
     def main_colors_analysis(self, img, mask):
         "Create output dir for main_colors_analysis"
 
         self.main_colors_analysis_output_dir = self.output_dir + 'main_colors_analysis/'
         if not os.path.exists(self.main_colors_analysis_output_dir): os.makedirs(self.main_colors_analysis_output_dir)
+        
+        main_colors = color_analysis.main_color_analysis(img)
 
-
+        return main_colors
 
 
     def get_vessel_image_with_mask(self,frame):
         "Input vessel image and return image with mask(trigger liquid_separation_detect)"
 
         global value
+        
+
+
 
         # If program detects vessel, the second_condition is not satified. Program try to detect vessel again decided by the first condition.
         # If program doesn't detect vessel, the first_condition is not satified. Program try to detect vessel again decided by the second condition.
@@ -157,7 +176,12 @@ class Exp():
         resized_frame = cv2.resize(frame,(w,h),interpolation= cv2.INTER_AREA)
         self.resized_frame = resized_frame.copy() # save resized_frame as the input of entropy calculation
         
+        
         if value is False:
+            if self.main_colors_analysis_mode is True:
+                # Initialize main_colors
+                self.main_colors = 'no Vessel Detect!'
+
             if  self.count_for_detect_vessel_while_no_vessel_detect % (5 * self.video_stream_fps) == 0: # display remaining time before detect vessel again per 1 second.
                 print("No vessel detect! Program starts to try again after %d seconds." \
                     %((self.interval_time_detect_vessel_while_no_vessel_detect - \
@@ -180,12 +204,27 @@ class Exp():
             if self.detect_liquid_separation_mode is True:
                 if self.count_for_calculate_image_entropy % self.interval_time_calculate_image_entropy == 0:
                     self.liquid_separation_detect(self.resized_frame,self.mask)
-            
+            if self.main_colors_analysis_mode is True:
+                try:
+                    self.main_colors # does main_colors exist in the current namespace
+                except NameError:
+                    self.main_colors = self.main_colors_analysis(self.resized_frame, self.mask)
+                  
+                if self.count_for_main_colors_analysis % self.interval_time_main_colors_analysis == 0:
+                    self.main_colors = self.main_colors_analysis(self.resized_frame, self.mask)
+
             if self.detect_color_change_mode is True:
+                if self.old_img is None:
+                    self.old_img = self.resized_frame
+
                 if self.count_for_calculate_color_change % self.interval_time_calculate_color_change == 0:
-                    self.color_change_detect(self.resized_frame,self.mask)
+                    self.color_distance = self.color_change_detect(self.old_img, self.resized_frame)
+                    self.old_img = self.resized_frame
+
             self.count_for_calculate_image_entropy += 1
             self.count_for_calculate_color_change += 1
+            self.count_for_main_colors_analysis += 1
+            
             self.count_for_detect_vessel_while_no_vessel_detect = 0 # When value is not False, which means a vessel is detected.
                                                                     # Set count_for_detect_vessel_while_no_vessel_detect is 0, it will plus 1 at the end of the loop, 
                                                                     # At the beginning of the new loop, count_for_detect_vessel_while_no_vessel_detect is 1.
@@ -194,7 +233,7 @@ class Exp():
         self.count_for_detect_vessel += 1
         self.count_for_detect_vessel_while_no_vessel_detect += 1
 
-        return image_with_mask
+        return image_with_mask, self.main_colors, self.color_distance
         
     def save_liquid_separation_results(self,video_clip,entropy_clip):
         """Save original frames into output dirs"""

@@ -2,7 +2,7 @@ import cv2
 from Exp_v3 import Exp
 import time
 
-cap = cv2.VideoCapture("Videos_Resources/Simplicity - Diffusion of Food Coloring in Water.mp4")
+cap = cv2.VideoCapture("Videos_Resources/Four Colour Change Reaction (Chameleon Chemical Reaction).mp4")
 #cap2 = cv2.VideoCapture("Videos_for_test/short_20210607_152134.mp4")
 camera1 = Exp("test1")
 
@@ -15,17 +15,35 @@ camera1 = Exp("test1")
 while True:
     ret,frame = cap.read()
     if frame is not None:
-        image_with_mask = camera1.get_vessel_image_with_mask(frame)
+
+        # time.sleep is only used in the demo for a better visualization.
+        time.sleep(0.04) 
+
+        image_with_mask,main_colors, color_distance = camera1.get_vessel_image_with_mask(frame)
+        main_colors = str(main_colors)
+
+        if color_distance >= 30 and color_distance <= 100:
+            color_change_info = "detect color change! color distance = " + str(color_distance)
+        elif color_distance > 100:
+            color_change_info = "detect abnormal color change!"
+        else:
+            color_change_info = "no color change detect"
 
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(image_with_mask, 
-                'TEXT ON VIDEO', 
+                main_colors, 
                 (50, 50), 
-                font, 1, 
+                font, 0.6, 
                 (0, 255, 255), 
                 2, 
                 cv2.LINE_4)
-                
+        cv2.putText(image_with_mask, 
+                color_change_info, 
+                (50, 100), 
+                font, 0.6, 
+                (0, 255, 255), 
+                2, 
+                cv2.LINE_4)        
         cv2.imshow('image_with_mask',image_with_mask)
     else:
         break
