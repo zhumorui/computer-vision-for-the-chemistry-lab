@@ -70,7 +70,7 @@ while True:
 cap.release()
 cv2.destroyAllWindows() 
 
-# plot color change
+# plot color change figure and save figure in local dir
 x = []
 for i in range(len(color_distance_list)):
     x.append(i)
