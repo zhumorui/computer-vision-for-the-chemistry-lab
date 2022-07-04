@@ -286,7 +286,3 @@ class Exp():
         P = hist_cv/(len(img)*len(img[0])) 
         E = -np.sum([p *np.log2(p + 1e-5) for p in P])
         return E
-
-    def cal_color(self,img,mask):
-        color = 1
-        return color

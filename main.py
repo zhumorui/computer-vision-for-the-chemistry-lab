@@ -15,6 +15,7 @@ camera1 = Exp("test1")
 " Test 15 description: ITDV:10;DBMM >= 0.08;RIED:4;"
 " Test 16 description: ITDV:30; DBMM>= 0.05;RIED:4"
 
+
 while True:
     ret,frame = cap.read()
     if frame is not None:
@@ -23,17 +24,22 @@ while True:
         # time.sleep(0.04) 
 
         image_with_mask,main_colors, color_distance = camera1.get_vessel_image_with_mask(frame)
-        color_distance_list = []
-        color_distance_list.append(color_distance)
+        
+        try:
+            color_distance_list 
+        except NameError:
+            color_distance_list = []
+
+        color_distance_list.append(int(color_distance))
 
         main_colors = str(main_colors)
 
         if color_distance >= 30 and color_distance <= 100:
             color_change_info = "detect color change! color distance = " + str(color_distance)
         elif color_distance > 100:
-            color_change_info = "detect abnormal color change!" + str(color_distance)
+            color_change_info = "detect abnormal color change! color distance = " + str(color_distance)
         else:
-            color_change_info = "no color change detect" + str(color_distance)
+            color_change_info = "no color change detect! color distance =" + str(color_distance)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
 

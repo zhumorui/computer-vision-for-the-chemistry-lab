@@ -6,6 +6,8 @@ __pycache__/
 # Output dirctionary
 output/
 
+# VScode configuration dictionary
+.vscode/
 
 # Desktop Services Store File in Mac
 .Ds_Store
