@@ -1,6 +1,7 @@
 import cv2
 from cv2 import exp
 from Exp_v3 import Exp
+import time
 
 # Average processing time for each frame: 0.005 s (Open all functions)
 
@@ -18,7 +19,8 @@ camera1_instance = Exp("test1",detect_liquid_separation_mode = True,
                 interval_time_detect_vessel_while_no_vessel_detect = 1, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
-                interval_time_main_colors_analysis = 5 # Unit: Second
+                interval_time_main_colors_analysis = 5, # Unit: Second
+                interval_time_saving_color_change_figure = 60 # Unit: Second
                 )
 
 # Start video processing
@@ -26,6 +28,9 @@ while True:
     ret,camera1_frame = camera1_stream.read()
 
     if camera1_frame is not None:
+        # slow down the video play
+        time.sleep(0.04)
+
         camera1_output_frame = camera1_instance.get_output_frame(camera1_frame)
         cv2.imshow('image_with_mask',camera1_output_frame)
         

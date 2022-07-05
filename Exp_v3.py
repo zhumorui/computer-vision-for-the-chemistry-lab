@@ -8,6 +8,7 @@ from tkinter.constants import N
 from utils.Vessel_detect import get_frame_OutAnnMap
 import utils.color_analysis as color_analysis
 import matplotlib.pyplot as plt
+from utils.general import get_now_time
 
 #........................Description.........................
 # Including liquid separation detect and color change detect function.
@@ -37,7 +38,8 @@ class Exp():
                 interval_time_detect_vessel_while_no_vessel_detect = 1, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
-                interval_time_main_colors_analysis = 5 # Unit: Second
+                interval_time_main_colors_analysis = 5, # Unit: Second
+                interval_time_saving_color_change_figure = 300 # Unit: Second
                 #...............Parameters Description...............................#
                 # webcamer_id: webcamer_id should be unique for each wecamer stream. And the type of id is string.
                 # detect_liquid_separation_mode: image_entropy will be calculated and liquid_separation_process will be detected when it's True.
@@ -48,7 +50,8 @@ class Exp():
                 # interval_time_detect_vessel_while_no_vessel_detect: the interval time to detect vessel again if the program didn't detect a vessel in the video.
                 # interval_time_calculate_image_entropy: interval time to calculate image entropy.
                 # interval_time_calculate_color_change: interval time to calculate color change.
-                # interval_time_main_colors_analysis: interval time to analyze main colors
+                # interval_time_main_colors_analysis: interval time to analyze main colors.
+                # interval_time_saving_color_change_figure: interval time for saving color change figure.
                 ):
 
         "get webcamer id and save data in the dir named with id"
@@ -65,6 +68,9 @@ class Exp():
         self.interval_time_calculate_color_change = interval_time_calculate_color_change * video_stream_fps
         self.interval_time_detect_vessel_while_no_vessel_detect = interval_time_detect_vessel_while_no_vessel_detect * video_stream_fps
         self.interval_time_main_colors_analysis = interval_time_main_colors_analysis * video_stream_fps
+
+        "time interval for saving color change result via saving figure"
+        self.interval_time_saving_color_change_figure = interval_time_saving_color_change_figure * video_stream_fps
 
         "get fps of video stream."
         self.video_stream_fps = video_stream_fps
@@ -97,8 +103,13 @@ class Exp():
         "initialize color distance"
         self.color_distance = 0
 
+        "initialize color distance list"
+        self.color_distance_list = []
+
         "initialize output image"
         self.output_img = None
+
+
 
     def liquid_separation_detect(self,img,mask):
         "Create output dir for liquid_separation_detect"
@@ -127,14 +138,14 @@ class Exp():
                 del self.liquid_sep_video_clip[0]
                 del self.liquid_sep_entropy_clip[0]
 
-    def color_change_detect(self,old_img,new_img):
+    def color_change_detect(self,old_img,new_img,mask):
         "Create output dir for color_change_detect"
 
         self.color_change_output_dir = self.output_dir + 'color_change_detect/'
         if not os.path.exists(self.color_change_output_dir): os.makedirs(self.color_change_output_dir)
 
         # Get color data, and put them into a video clip.
-        color_distance = color_analysis.cal_color_change(old_img,new_img)
+        color_distance = color_analysis.cal_color_change(old_img,new_img,mask)
         if len(self.color_change_video_clip) < 40:
             self.color_change_video_clip.append(new_img)
         else:
@@ -186,10 +197,6 @@ class Exp():
         
         
         if value is False:
-            if self.main_colors_analysis_mode is True:
-                # Initialize main_colors
-                self.main_colors = 'no Vessel Detect!'
-
             if  self.count_for_detect_vessel_while_no_vessel_detect % (5 * self.video_stream_fps) == 0: # display remaining time before detect vessel again per 1 second.
                 print("No vessel detect! Program starts to try again after %d seconds." \
                     %((self.interval_time_detect_vessel_while_no_vessel_detect - \
@@ -227,8 +234,10 @@ class Exp():
                     self.old_img = self.resized_frame
 
                 if self.count_for_calculate_color_change % self.interval_time_calculate_color_change == 0:
-                    self.color_distance = self.color_change_detect(self.old_img, self.resized_frame)
+                    self.color_distance = self.color_change_detect(self.old_img, self.resized_frame,self.mask)
                     self.old_img = self.resized_frame
+
+            # count for optional functions
 
             self.count_for_calculate_image_entropy += 1
             self.count_for_calculate_color_change += 1
@@ -239,66 +248,71 @@ class Exp():
                                                                     # At the beginning of the new loop, count_for_detect_vessel_while_no_vessel_detect is 1.
                                                                     # The second condition is not satisfied.
                                                                     # So we just decide when program try to detect vessel again by the first condition.
+            
+            # Results Visualization
+
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            
+            # Visualize main colors analysis results on frames
+            if self.main_colors_analysis_mode is True:
+                string_main_colors = str(self.main_colors)
+                # main colors analysis text on frame
+                cv2.putText(image_with_mask, 
+                        string_main_colors, 
+                        (50, 50), 
+                        font, 0.6, 
+                        (0, 255, 255), 
+                        2, 
+                        cv2.LINE_4)
+
+            # Visualize color change detection results on frames
+            if self.detect_color_change_mode is True:
+
+                self.color_distance_list.append(int(self.color_distance))
+                
+                if self.color_distance >= 30 and self.color_distance <= 100:
+                    color_change_info = "detect color change! color distance = " + str(self.color_distance)
+
+                elif self.color_distance > 100:
+                    color_change_info = "detect abnormal color change! color distance = " + str(self.color_distance)
+
+                else:
+                    color_change_info = "no color change detect! color distance = " + str(self.color_distance)
+
+                # color change information text on frame
+                cv2.putText(image_with_mask, 
+                        color_change_info, 
+                        (50, 100), 
+                        font, 0.6, 
+                        (0, 255, 255), 
+                        2, 
+                        cv2.LINE_4)
+
+                # plot color change
+
+                x = []
+                for i in range(len(self.color_distance_list)):
+                    x.append(i)
+
+                if len(x) >= self.interval_time_saving_color_change_figure:
+                    plt.plot(x, self.color_distance_list)
+                    plt.savefig(os.path.join(self.color_change_output_dir, get_now_time() + ".png"))
+
+                    # After saving the figure, initialize the x and color_distance_list
+                    x = []
+                    self.color_distance_list = []
+                    plt.close()
+
+        # Count for mandatory functions
         self.count_for_detect_vessel += 1
         self.count_for_detect_vessel_while_no_vessel_detect += 1
-        
-        
-        font = cv2.FONT_HERSHEY_SIMPLEX
-
-
-        if self.main_colors_analysis_mode is True:
-            string_main_colors = str(self.main_colors)
-            # main colors analysis text on frame
-            cv2.putText(image_with_mask, 
-                    string_main_colors, 
-                    (50, 50), 
-                    font, 0.6, 
-                    (0, 255, 255), 
-                    2, 
-                    cv2.LINE_4)
-
-
-        if self.detect_color_change_mode is True:
-            try:
-                color_distance_list 
-            except NameError:
-                color_distance_list = []
-
-            color_distance_list.append(int(self.color_distance))
-            
-            if self.color_distance >= 30 and self.color_distance <= 100:
-                color_change_info = "detect color change! color distance = " + str(self.color_distance)
-
-            elif self.color_distance > 100:
-                color_change_info = "detect abnormal color change! color distance = " + str(self.color_distance)
-
-            else:
-                color_change_info = "no color change detect! color distance =" + str(self.color_distance)
-
-            # color change information text on frame
-            cv2.putText(image_with_mask, 
-                    color_change_info, 
-                    (50, 100), 
-                    font, 0.6, 
-                    (0, 255, 255), 
-                    2, 
-                    cv2.LINE_4)
-
-            # plot color change
-
-            x = []
-            for i in range(len(color_distance_list)):
-                x.append(i)
-
-
-            #plt.plot(x, color_distance_list)
-            #plt.savefig("color_change_figure.png")
 
         # Generate output image
         self.output_img = image_with_mask
 
 
         return image_with_mask
+
         
     def save_liquid_separation_results(self,video_clip,entropy_clip):
         """Save original frames into output dirs"""

@@ -7,13 +7,24 @@ import cv2
 
 # Calculate Color change between two different images.
 # Input Channel should be RGB not BGR. 
-def cal_color_change(img1,img2):
+def cal_color_change(img1,img2,mask):
     assert img1.shape == img2.shape, "Image Size doesn't match"
     
     # Image should use RGB channel not BGR
     # Convert int type to float
     img1 = img1.astype(float)
     img2 = img2.astype(float)
+
+    # Add ROI extraction on images
+    img1 = cv2.bitwise_and(img1,img1,mask)
+    img2 = cv2.bitwise_and(img2,img2,mask)
+
+    img1[mask==0] = 0
+    img2[mask==0] = 0
+
+    # cv2.imwrite("img1.png",img1)
+    # cv2.imwrite("img2.png",img2)
+    # cv2.imwrite("mask.png",mask)
 
     rmean = (img1[:,:,0] + img2[:,:,0])/2
     r = img1[:,:,0] - img2[:,:,0]
