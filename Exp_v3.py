@@ -7,17 +7,21 @@ import pandas as pd
 from tkinter.constants import N
 from utils.Vessel_detect import get_frame_OutAnnMap
 import utils.color_analysis as color_analysis
+import matplotlib.pyplot as plt
 
 #........................Description.........................
-# Including liquid separation detect(finished) and color change detect function(not finished).
+# Including liquid separation detect and color change detect function.
 # Including data save function.
 # Add Parameters Description.
 # The Speed of detect vessel is 2X than v1.
-# Default mode is CPU, the mode can be changed in the file(Exp_detect/Vessel_detect.py)
+# Default mode is GPU, the mode can be changed in the file(Exp_detect/Vessel_detect.py)
 
 # round image entropy decimal places: RIED
 # Difference between max and min of 5 entropy clip:DBMM
 # interval time to detect vessel: ITDV (Unit: minutes)
+# This program only could detect one vessel. 
+# When there are more than one vessel, program will select biggest one.
+# Other algorithms will wait until detecting a vessel.
 
 " Important parameters description: ITDV:30; DBMM>= 0.05;RIED:4"
 
@@ -46,6 +50,7 @@ class Exp():
                 # interval_time_calculate_color_change: interval time to calculate color change.
                 # interval_time_main_colors_analysis: interval time to analyze main colors
                 ):
+
         "get webcamer id and save data in the dir named with id"
         self.id = webcamera_id
 
@@ -91,6 +96,9 @@ class Exp():
 
         "initialize color distance"
         self.color_distance = 0
+
+        "initialize output image"
+        self.output_img = None
 
     def liquid_separation_detect(self,img,mask):
         "Create output dir for liquid_separation_detect"
@@ -150,15 +158,15 @@ class Exp():
 
         return main_colors
 
-
-    def get_vessel_image_with_mask(self,frame):
-        "Input vessel image and return image with mask(trigger liquid_separation_detect)"
-
+    
+    def get_output_frame(self,frame):
+        "Input vessel image and return image with mask(trigger other functions)"
+        "Only when detected vessel, other functions can be triggered"
+        
+        # value is false means that program dosen's detect vessel
+        # value is True means that program detect one vessel
         global value
         
-
-
-
         # If program detects vessel, the second_condition is not satified. Program try to detect vessel again decided by the first condition.
         # If program doesn't detect vessel, the first_condition is not satified. Program try to detect vessel again decided by the second condition.
         first_condition = self.count_for_detect_vessel % self.inteval_time_detect_vessel
@@ -204,6 +212,7 @@ class Exp():
             if self.detect_liquid_separation_mode is True:
                 if self.count_for_calculate_image_entropy % self.interval_time_calculate_image_entropy == 0:
                     self.liquid_separation_detect(self.resized_frame,self.mask)
+
             if self.main_colors_analysis_mode is True:
                 try:
                     self.main_colors # does main_colors exist in the current namespace
@@ -232,8 +241,64 @@ class Exp():
                                                                     # So we just decide when program try to detect vessel again by the first condition.
         self.count_for_detect_vessel += 1
         self.count_for_detect_vessel_while_no_vessel_detect += 1
+        
+        
+        font = cv2.FONT_HERSHEY_SIMPLEX
 
-        return image_with_mask, self.main_colors, self.color_distance
+
+        if self.main_colors_analysis_mode is True:
+            string_main_colors = str(self.main_colors)
+            # main colors analysis text on frame
+            cv2.putText(image_with_mask, 
+                    string_main_colors, 
+                    (50, 50), 
+                    font, 0.6, 
+                    (0, 255, 255), 
+                    2, 
+                    cv2.LINE_4)
+
+
+        if self.detect_color_change_mode is True:
+            try:
+                color_distance_list 
+            except NameError:
+                color_distance_list = []
+
+            color_distance_list.append(int(self.color_distance))
+            
+            if self.color_distance >= 30 and self.color_distance <= 100:
+                color_change_info = "detect color change! color distance = " + str(self.color_distance)
+
+            elif self.color_distance > 100:
+                color_change_info = "detect abnormal color change! color distance = " + str(self.color_distance)
+
+            else:
+                color_change_info = "no color change detect! color distance =" + str(self.color_distance)
+
+            # color change information text on frame
+            cv2.putText(image_with_mask, 
+                    color_change_info, 
+                    (50, 100), 
+                    font, 0.6, 
+                    (0, 255, 255), 
+                    2, 
+                    cv2.LINE_4)
+
+            # plot color change
+
+            x = []
+            for i in range(len(color_distance_list)):
+                x.append(i)
+
+
+            #plt.plot(x, color_distance_list)
+            #plt.savefig("color_change_figure.png")
+
+        # Generate output image
+        self.output_img = image_with_mask
+
+
+        return image_with_mask
         
     def save_liquid_separation_results(self,video_clip,entropy_clip):
         """Save original frames into output dirs"""
@@ -286,3 +351,4 @@ class Exp():
         P = hist_cv/(len(img)*len(img[0])) 
         E = -np.sum([p *np.log2(p + 1e-5) for p in P])
         return E
+    

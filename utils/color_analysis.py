@@ -1,6 +1,6 @@
 import numpy as np
 from collections import Counter
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, MiniBatchKMeans
 import numpy as np
 import cv2
 
@@ -35,7 +35,9 @@ def rgb_to_hex(rgb_color):
 
 def main_color_analysis(img,n_clusters=3):
     img = prep_image(img)
-    clf = KMeans(n_clusters)
+
+    # MiniBatchKMeans is much faster than Classical KMeans algorithm 
+    clf = MiniBatchKMeans(n_clusters,)
     color_labels = clf.fit_predict(img)
     center_colors = clf.cluster_centers_
     counts = Counter(color_labels)
