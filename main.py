@@ -39,7 +39,6 @@ camera1_stream.release()
 cv2.destroyAllWindows() 
 
 
-
 """
 # Offline Videos Batch Processing
 class Video_processing():
