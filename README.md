@@ -20,4 +20,4 @@ Weight files link: https://drive.google.com/drive/folders/1SBjdqPskKwYyABW4xGnT_
 
 ## Configuration
 
-default mode: GPU mode # mode can be modified in "utils/Vessel_detect.py"
+default mode: GPU mode # running mode can be modified in "utils/Vessel_detect.py"
