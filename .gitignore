@@ -6,6 +6,9 @@ __pycache__/
 # Output dirctionary
 output/
 
+# third-parties
+bocd/
+
 # VScode configuration dictionary
 .vscode/
 

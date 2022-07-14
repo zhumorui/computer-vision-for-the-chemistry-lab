@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from tkinter.constants import N
 from utils.Vessel_detect import get_frame_OutAnnMap
+# from utils.BayesianOnlineChangePointDetection import change_point_detection
 import utils.color_analysis as color_analysis
 import matplotlib.pyplot as plt
 from utils.general import get_now_time
@@ -39,7 +40,9 @@ class Exp():
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
                 interval_time_main_colors_analysis = 5, # Unit: Second
-                interval_time_saving_color_change_figure = 300 # Unit: Second
+                interval_time_saving_color_change_figure = 300, # Unit: Second
+                color_change_detect_threshold = 40 # color change detection threshold
+
                 #...............Parameters Description...............................#
                 # webcamer_id: webcamer_id should be unique for each wecamer stream. And the type of id is string.
                 # detect_liquid_separation_mode: image_entropy will be calculated and liquid_separation_process will be detected when it's True.
@@ -52,6 +55,7 @@ class Exp():
                 # interval_time_calculate_color_change: interval time to calculate color change.
                 # interval_time_main_colors_analysis: interval time to analyze main colors.
                 # interval_time_saving_color_change_figure: interval time for saving color change figure.
+                # color_change_detect_threshold: higher threshold, higher limit of detection. 
                 ):
 
         "get webcamer id and save data in the dir named with id"
@@ -103,12 +107,14 @@ class Exp():
         "initialize color distance"
         self.color_distance = 0
 
-        "initialize color distance list"
-        self.color_distance_list = []
+        "initialize color distance array"
+        self.color_distance_array = np.zeros(0)
 
         "initialize output image"
         self.output_img = None
 
+        "assign threshold for color change detection"
+        self.color_change_detect_threshold = color_change_detect_threshold
 
 
     def liquid_separation_detect(self,img,mask):
@@ -201,7 +207,7 @@ class Exp():
                 print("No vessel detect! Program starts to try again after %d seconds." \
                     %((self.interval_time_detect_vessel_while_no_vessel_detect - \
                         self.count_for_detect_vessel_while_no_vessel_detect)/self.video_stream_fps))
-            image_with_mask = frame
+            image_with_mask = resized_frame
             self.count_for_detect_vessel = 0 # When value is False, which means on vessel detect. 
                                              # Set count_for_detect_vessel is 0, it will plus 1 at the end of the loop, 
                                              # At the beginning of the new loop, count_for_detect_vessel is 1.
@@ -268,9 +274,9 @@ class Exp():
             # Visualize color change detection results on frames
             if self.detect_color_change_mode is True:
 
-                self.color_distance_list.append(int(self.color_distance))
+                self.color_distance_array = np.append(self.color_distance_array,int(self.color_distance))
                 
-                if self.color_distance >= 30 and self.color_distance <= 100:
+                if self.color_distance >= self.color_change_detect_threshold and self.color_distance <= 100:
                     color_change_info = "detect color change! color distance = " + str(self.color_distance)
 
                 elif self.color_distance > 100:
@@ -290,18 +296,20 @@ class Exp():
 
                 # plot color change
 
-                x = []
-                for i in range(len(self.color_distance_list)):
-                    x.append(i)
-
-                if len(x) >= self.interval_time_saving_color_change_figure:
-                    plt.plot(x, self.color_distance_list)
+                if len(self.color_distance_array) >= self.interval_time_saving_color_change_figure:
+                    
+                    plt.plot(self.color_distance_array)
                     plt.savefig(os.path.join(self.color_change_output_dir, get_now_time() + ".png"))
 
-                    # After saving the figure, initialize the x and color_distance_list
-                    x = []
-                    self.color_distance_list = []
+                    # After saving the figure, initialize the x and color_distance_array
+                    self.color_distance_array = np.zeros(0)
                     plt.close()
+
+                    # Apply BayesianOnlineChangePointDetection Algorithm
+                    # change_point_detection(self.color_distance_array,
+                    #                         os.path.join(self.color_change_output_dir, get_now_time() + ".png")
+                    #                         )
+                    # self.color_distance_array = np.zeros(0)
 
         # Count for mandatory functions
         self.count_for_detect_vessel += 1
@@ -311,7 +319,9 @@ class Exp():
         self.output_img = image_with_mask
 
 
-        return image_with_mask
+        #self.output_img = cv2.cvtColor(self.output_img, cv2.COLOR_BGR2RGB)
+
+        return self.output_img
 
         
     def save_liquid_separation_results(self,video_clip,entropy_clip):

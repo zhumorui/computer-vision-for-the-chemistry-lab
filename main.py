@@ -7,7 +7,8 @@ import time
 
 
 # Create video stream, support rtsp stream, support multiple streams
-camera1_stream = cv2.VideoCapture("Videos_Resources/Four Colour Change Reaction (Chameleon Chemical Reaction).mp4")
+camera1_stream = cv2.VideoCapture("Videos_Resources/20210607_152134.mp4")
+#camera1_stream = cv2.VideoCapture(0)
 
 # Create camera object and set configuration, support multiple streams
 camera1_instance = Exp("test1",detect_liquid_separation_mode = True,
@@ -15,12 +16,13 @@ camera1_instance = Exp("test1",detect_liquid_separation_mode = True,
                 main_colors_analysis_mode = True,
                 video_stream_fps = 25,
                 default_save_data_format = 'xlsx', # optional format:csv
-                interval_time_detect_vessel = 120, # Unit: Second 
+                interval_time_detect_vessel = 300, # Unit: Second 
                 interval_time_detect_vessel_while_no_vessel_detect = 1, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
                 interval_time_main_colors_analysis = 5, # Unit: Second
-                interval_time_saving_color_change_figure = 60 # Unit: Second
+                interval_time_saving_color_change_figure = 100, # Unit: Second
+                color_change_detect_threshold = 30 # color change detection threshold
                 )
 
 # Start video processing
@@ -29,7 +31,7 @@ while True:
 
     if camera1_frame is not None:
         # slow down the video play
-        time.sleep(0.04)
+        #time.sleep(0.04)
 
         camera1_output_frame = camera1_instance.get_output_frame(camera1_frame)
         cv2.imshow('image_with_mask',camera1_output_frame)

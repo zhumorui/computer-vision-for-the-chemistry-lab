@@ -31,7 +31,7 @@ def cal_color_change(img1,img2,mask):
     g = img1[:,:,1] - img2[:,:,1]
     b = img1[:,:,2] - img2[:,:,2]
     distance = np.sqrt(((2 + rmean / 256) * r ** 2 + 4 * g ** 2 + (2 + (255 - rmean) / 256) * b ** 2))
-    mean_distance = np.mean(distance)
+    mean_distance = np.mean(distance[mask!=0])
 
     return mean_distance
 
