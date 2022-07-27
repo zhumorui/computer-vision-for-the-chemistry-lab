@@ -7,16 +7,16 @@ import time
 
 
 # Create video stream, support rtsp stream, support multiple streams
-camera1_stream = cv2.VideoCapture("Videos_Resources/20210607_152134.mp4")
-#camera1_stream = cv2.VideoCapture(0)
+#camera1_stream = cv2.VideoCapture("Videos_Resources/color_change_test.mov")
+camera1_stream = cv2.VideoCapture(0)
 
 # Create camera object and set configuration, support multiple streams
 camera1_instance = Exp("test1",detect_liquid_separation_mode = True,
-                detect_color_change_mode = True,
+                detect_color_change_mode = False,
                 main_colors_analysis_mode = True,
                 video_stream_fps = 25,
                 default_save_data_format = 'xlsx', # optional format:csv
-                interval_time_detect_vessel = 300, # Unit: Second 
+                interval_time_detect_vessel = 3, # Unit: Second 
                 interval_time_detect_vessel_while_no_vessel_detect = 1, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
@@ -24,6 +24,9 @@ camera1_instance = Exp("test1",detect_liquid_separation_mode = True,
                 interval_time_saving_color_change_figure = 100, # Unit: Second
                 color_change_detect_threshold = 30 # color change detection threshold
                 )
+
+
+start = None
 
 # Start video processing
 while True:
@@ -34,6 +37,14 @@ while True:
         #time.sleep(0.04)
 
         camera1_output_frame = camera1_instance.get_output_frame(camera1_frame)
+        if start is None:
+            frame_height = camera1_output_frame.shape[0]
+            frame_width = camera1_output_frame.shape[1]
+            out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc(*'MJPG'), 10, (frame_width,frame_height))
+            start = 1
+
+        out.write(camera1_output_frame)
+
         cv2.imshow('image_with_mask',camera1_output_frame)
         
     else:
@@ -43,7 +54,10 @@ while True:
         break
 
 camera1_stream.release()
+out.release()
+
 cv2.destroyAllWindows() 
+
 
 
 """

@@ -288,7 +288,7 @@ class Exp():
                 # color change information text on frame
                 cv2.putText(image_with_mask, 
                         color_change_info, 
-                        (50, 100), 
+                        (50, 50), 
                         font, 0.6, 
                         (0, 255, 255), 
                         2, 
@@ -319,7 +319,7 @@ class Exp():
         self.output_img = image_with_mask
 
 
-        #self.output_img = cv2.cvtColor(self.output_img, cv2.COLOR_BGR2RGB)
+        self.output_img = cv2.cvtColor(self.output_img, cv2.COLOR_BGR2RGB)
 
         return self.output_img
 
