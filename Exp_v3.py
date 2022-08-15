@@ -33,6 +33,7 @@ class Exp():
                 detect_liquid_separation_mode = True,
                 detect_color_change_mode = True,
                 main_colors_analysis_mode = True,
+                video_stream_mode = 'offline',
                 video_stream_fps = 25,
                 default_save_data_format = 'xlsx', # optional format:csv
                 interval_time_detect_vessel = 120, # Unit: Second 
@@ -57,6 +58,10 @@ class Exp():
                 # interval_time_saving_color_change_figure: interval time for saving color change figure.
                 # color_change_detect_threshold: higher threshold, higher limit of detection. 
                 ):
+
+
+        " get video stream mode: offline or online"
+        self.video_stream_mode = video_stream_mode
 
         "get webcamer id and save data in the dir named with id"
         self.id = webcamera_id
@@ -318,8 +323,8 @@ class Exp():
         # Generate output image
         self.output_img = image_with_mask
 
-
-        self.output_img = cv2.cvtColor(self.output_img, cv2.COLOR_BGR2RGB)
+        if self.video_stream_mode == 'online':
+            self.output_img = cv2.cvtColor(self.output_img, cv2.COLOR_BGR2RGB)
 
         return self.output_img
 
@@ -375,4 +380,3 @@ class Exp():
         P = hist_cv/(len(img)*len(img[0])) 
         E = -np.sum([p *np.log2(p + 1e-5) for p in P])
         return E
-    

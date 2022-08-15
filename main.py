@@ -7,22 +7,23 @@ import time
 
 
 # Create video stream, support rtsp stream, support multiple streams
-#camera1_stream = cv2.VideoCapture("Videos_Resources/color_change_test.mov")
-camera1_stream = cv2.VideoCapture(0)
+camera1_stream = cv2.VideoCapture("Videos_Resources/BZ01.mp4")
+#camera1_stream = cv2.VideoCapture(0)
 
 # Create camera object and set configuration, support multiple streams
-camera1_instance = Exp("test1",detect_liquid_separation_mode = True,
-                detect_color_change_mode = False,
-                main_colors_analysis_mode = True,
+camera1_instance = Exp("BZ01_test",detect_liquid_separation_mode = False,
+                detect_color_change_mode = True,
+                main_colors_analysis_mode = False,
+                video_stream_mode = 'offline',
                 video_stream_fps = 25,
                 default_save_data_format = 'xlsx', # optional format:csv
-                interval_time_detect_vessel = 3, # Unit: Second 
+                interval_time_detect_vessel = 120, # Unit: Second 
                 interval_time_detect_vessel_while_no_vessel_detect = 1, # Unit: Second
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
                 interval_time_main_colors_analysis = 5, # Unit: Second
                 interval_time_saving_color_change_figure = 100, # Unit: Second
-                color_change_detect_threshold = 30 # color change detection threshold
+                color_change_detect_threshold = 10 # color change detection threshold
                 )
 
 
@@ -113,5 +114,6 @@ video1 = Video_processing(camera_id="stream1",camera_stream_link="Videos_Resourc
 video2 = Video_processing(camera_id="stream2",camera_stream_link="Videos_Resources/Four Colour Change Reaction (Chameleon Chemical Reaction).mp4")
 
 """
+
 
 
