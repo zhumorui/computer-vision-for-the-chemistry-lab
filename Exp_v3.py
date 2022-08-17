@@ -41,7 +41,7 @@ class Exp():
                 interval_time_calculate_image_entropy = 1, # Unit: Second
                 interval_time_calculate_color_change = 1, # Unit: Second
                 interval_time_main_colors_analysis = 5, # Unit: Second
-                interval_time_saving_color_change_figure = 300, # Unit: Second
+                interval_time_saving_color_change_figure = 600, # Unit: Second
                 color_change_detect_threshold = 40 # color change detection threshold
 
                 #...............Parameters Description...............................#
@@ -278,8 +278,8 @@ class Exp():
 
             # Visualize color change detection results on frames
             if self.detect_color_change_mode is True:
-
-                self.color_distance_array = np.append(self.color_distance_array,int(self.color_distance))
+                if self.count_for_calculate_color_change % self.interval_time_calculate_color_change == 0:
+                    self.color_distance_array = np.append(self.color_distance_array,int(self.color_distance))
                 
                 if self.color_distance >= self.color_change_detect_threshold and self.color_distance <= 100:
                     color_change_info = "detect color change! color distance = " + str(self.color_distance)
@@ -299,22 +299,23 @@ class Exp():
                         2, 
                         cv2.LINE_4)
 
-                # plot color change
 
-                if len(self.color_distance_array) >= self.interval_time_saving_color_change_figure:
+                
+                # # plot and save color change distance array clips
+                # if len(self.color_distance_array) >= self.interval_time_saving_color_change_figure:
                     
-                    plt.plot(self.color_distance_array)
-                    plt.savefig(os.path.join(self.color_change_output_dir, get_now_time() + ".png"))
+                #     plt.plot(self.color_distance_array)
+                #     plt.savefig(os.path.join(self.color_change_output_dir, get_now_time() + ".png"))
 
-                    # After saving the figure, initialize the x and color_distance_array
-                    self.color_distance_array = np.zeros(0)
-                    plt.close()
+                #     # After saving the figure, initialize the x and color_distance_array
+                #     self.color_distance_array = np.zeros(0)
+                #     plt.close()
 
-                    # Apply BayesianOnlineChangePointDetection Algorithm
-                    # change_point_detection(self.color_distance_array,
-                    #                         os.path.join(self.color_change_output_dir, get_now_time() + ".png")
-                    #                         )
-                    # self.color_distance_array = np.zeros(0)
+                #     # Apply BayesianOnlineChangePointDetection Algorithm
+                #     # change_point_detection(self.color_distance_array,
+                #     #                         os.path.join(self.color_change_output_dir, get_now_time() + ".png")
+                #     #                         )
+                #     # self.color_distance_array = np.zeros(0)
 
         # Count for mandatory functions
         self.count_for_detect_vessel += 1
@@ -328,7 +329,16 @@ class Exp():
 
         return self.output_img
 
+    def save_color_distance_array(self):
+        plt.plot(self.color_distance_array)
+        plt.savefig(os.path.join(self.color_change_output_dir, get_now_time() + ".png"))
         
+        df = pd.DataFrame({'color distance': self.color_distance_array})
+        df.to_excel('{}.xlsx'.format(self.id), sheet_name='sheet1', index=False)
+        # After saving the figure, initialize the x and color_distance_array
+        self.color_distance_array = np.zeros(0)
+        plt.close()
+
     def save_liquid_separation_results(self,video_clip,entropy_clip):
         """Save original frames into output dirs"""
 
