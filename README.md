@@ -24,33 +24,31 @@ default mode: GPU mode # mode can be modified in "utils/Vessel_detect.py"
 
 ## Function Description
 
-## 功能描述(中文版)
+The Computer Vision Assisted Experimental Automation Framework is designed for intelligent analysis of experimental phenomena processes, either offline or online. It supports offline video and online RTSP stream inference, and features functionalities such as transparent glass container detection, liquid separation detection, primary color analysis, and color change detection.
 
-计算机视觉辅助实验自动化框架用于对实验现象过程进行离线或在线智能分析. 支持离线视频与在线RTSP流推理, 实现了透明玻璃容器检测、分液检测、主要颜色分析、颜色变化检测等功能. 
+The main.py serves as a demo script. Its workflow includes video stream acquisition, video stream ID definition, creation of video analysis objects, return of analysis results, real-time display, and analysis termination. All sub-algorithms (optional) are based on the main algorithm (transparent glass container mask) to extract the ROI area. If no glass container is detected, the algorithm will retry after a specified waiting time until a glass container is found, after which the sub-algorithms can be triggered.
 
-main.py为demo脚本, 其流程包括视频流的获取、视频流id的定义、视频分析对象的创建、分析结果的返回、实时显示、结束分析. 所有的子算法(可选)都基于主算法(透明玻璃容器mask)提取ROI区域实现, 如果未检测到玻璃容器, 算法将在对应的等待时间后再次进行检测, 直到检测到玻璃容器为止, 子算法才能继续被触发.
+The main directory includes folders such as utils (which contains a series of functions and script tools), Video_Resources (optional, used for offline or testing), and output (automatically generated during program execution). The main directory contains main.py (demo script) and Exp_v3.py (class file).
 
-主文件夹包括utils(包括一系列函数和脚本工具)、Video_Resources(可选,离线或测试时使用)、output(程序运行时自动生成)等文件夹. 主文件夹包括main.py(demo脚本), Exp_v3.py(类文件). 
+Details of the script corresponding functions and parameters can be found in the respective comment sections of the code.
 
-脚本对应函数与参数的细节在代码对应的注释区域.
+## Installation Instruction
 
-## 安装说明(中文版)
+1. Download the respective files:
 
-1. 下载对应文件
+    Weight files download link:
 
-    权重文件下载链接:
+    https://drive.google.com/drive/folders/1SBjdqPskKwYyABW4xGnT_k6p7i7hskcn?usp=sharing
 
-    Weight files link: https://drive.google.com/drive/folders/1SBjdqPskKwYyABW4xGnT_k6p7i7hskcn?usp=sharing
-
-    测试用视频下载链接:
+    Test video download link:
 
     https://drive.google.com/drive/folders/1xhWR0Rzq6qwpHGN3Rm18-Rby7yZWiOq-?usp=sharing
 
-2. 将权重文件放到以下的路径
+2. Place the weight files in the following paths:
 
     "utils/Semantic/logs/1000000_Semantic_withCOCO_AllSets.torch"
 
     "utils/InstanceVessel/logs/Vessel_Coco_610000_Trained_on_All_Sets.torch"
 
-3. 按照需要自行修改main.py中创建类时的默认设置, 然后运行main.py函数
-4. 分液检测与颜色变化检测的结果会在output文件夹中找到, 文件夹和文件会根据当地时间戳与对应的视频流id命名, 同时当检测到分液过程时, 终端也会有对应的输出.
+3. Modify the default settings in main.py as needed when creating the class, and then run the main.py function.
+4. Results for liquid separation detection and color change detection can be found in the output folder. The folders and files will be named based on the local timestamp and the corresponding video stream ID. Additionally, when a liquid separation process is detected, there will be corresponding outputs in the terminal.
